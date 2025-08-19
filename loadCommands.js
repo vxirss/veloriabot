@@ -45,6 +45,7 @@ for (const file of getAllCommandFiles(commandsPath)) {
     description: desc,
     options,
     default_member_permissions: command.default.data.default_member_permissions ?? undefined,
+    filePath: file, // Dodaj ścieżkę pliku komendy
   });
   console.log('Ładuję komendę:', file, command.default.data.name);
 }

@@ -1,5 +1,5 @@
-import { handleTicketButton, handleOpenTicketButton } from '../commands/utility/ticket.js';
-import { handleTeamButton } from '../commands/utility/team.js';
+import { handleTicketButton, handleOpenTicketButton } from '../commands/tickets/ticket.js';
+import { handleTeamButton } from '../commands/info/team.js';
 import { getVerifyRole } from '../database.js';
 
 export default {
