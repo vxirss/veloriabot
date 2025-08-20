@@ -1,3 +1,29 @@
+
+// Usuwa wszystkie dane powiązane z danym serwerem
+export async function clearGuildData(guildId) {
+  await Promise.all([
+    LogChannel.deleteMany({ guildId }),
+    CreateChannel.deleteMany({ guildId }),
+    MutedRole.deleteMany({ guildId }),
+    User.deleteMany({ guildId }),
+    Punishment.deleteMany({ guildId }),
+    GuildOptions.deleteMany({ guildId }),
+    LevelChannel.deleteMany({ guildId }),
+    TicketChannel.deleteMany({ guildId }),
+    LvlChannel.deleteMany({ guildId }),
+    TicketCategory.deleteMany({ guildId }),
+    TicketLogChannel.deleteMany({ guildId }),
+    Welcome.deleteMany({ guildId }),
+    AutoRole.deleteMany({ guildId }),
+    AutoMod.deleteMany({ guildId }),
+    Verify.deleteMany({ guildId }),
+    IdeasChannel.deleteMany({ guildId }),
+    LogIgnoreChannel.deleteMany({ guildId }),
+    // Dodaj inne modele jeśli są
+  ]);
+}
+import dotenv from 'dotenv';
+dotenv.config();
 import mongoose from 'mongoose';
 mongoose.set('strictQuery', false);
 mongoose.connect(process.env.MONGODB_URL);
@@ -50,10 +76,6 @@ export async function addCreateChannel(guildId, channelId, nameTemplate = '{user
 }
 export async function getCreateChannels(guildId) {
   return await CreateChannel.find({ guildId });
-}
-export async function getChannelTemplate(guildId, channelId) {
-  const entry = await CreateChannel.findOne({ guildId, channelId });
-  return entry ? entry.nameTemplate : '{username}';
 }
 export async function removeCreateChannel(guildId, channelId) {
   await CreateChannel.deleteOne({ guildId, channelId });
@@ -189,6 +211,74 @@ export async function getLevelChannel(guildId) {
 }
 
 // --- TICKETS ---
+// Ticket channel schema
+const ticketChannelSchema = new mongoose.Schema({
+  guildId: String,
+  channelId: String,
+});
+export const TicketChannel = mongoose.model('TicketChannel', ticketChannelSchema);
+
+export async function setTicketChannel(guildId, channelId) {
+  await TicketChannel.findOneAndUpdate(
+    { guildId },
+    { channelId },
+    { upsert: true, new: true }
+  );
+}
+export async function getTicketChannel(guildId) {
+  const entry = await TicketChannel.findOne({ guildId });
+  return entry ? entry.channelId : null;
+}
+// Mod log channel (alias for moderation log)
+export async function setModLog(guildId, channelId) {
+  await LogChannel.findOneAndUpdate(
+    { guildId, type: 'moderation' },
+    { channelId },
+    { upsert: true, new: true }
+  );
+}
+export async function getModLog(guildId) {
+  const entry = await LogChannel.findOne({ guildId, type: 'moderation' });
+  return entry ? entry.channelId : null;
+}
+// Level channel schema
+const lvlChannelSchema = new mongoose.Schema({
+  guildId: String,
+  channelId: String,
+});
+export const LvlChannel = mongoose.model('LvlChannel', lvlChannelSchema);
+
+export async function setLvlChannel(guildId, channelId) {
+  await LvlChannel.findOneAndUpdate(
+    { guildId },
+    { channelId },
+    { upsert: true, new: true }
+  );
+}
+export async function getLvlChannel(guildId) {
+  const entry = await LvlChannel.findOne({ guildId });
+  return entry ? entry.channelId : null;
+}
+// Channel template for create channel
+export async function setChannelTemplate(guildId, template) {
+  await CreateChannel.findOneAndUpdate(
+    { guildId },
+    { nameTemplate: template },
+    { upsert: true, new: true }
+  );
+}
+export async function getChannelTemplate(guildId) {
+  const entry = await CreateChannel.findOne({ guildId });
+  return entry ? entry.nameTemplate : '{username}';
+}
+// Set create channel (shortcut for addCreateChannel)
+export async function setCreateChannel(guildId, channelId) {
+  await CreateChannel.findOneAndUpdate(
+    { guildId },
+    { channelId },
+    { upsert: true, new: true }
+  );
+}
 
 const ticketSchema = new mongoose.Schema({
   guildId: String,
@@ -304,6 +394,9 @@ const autoModSchema = new mongoose.Schema({
   guildId: String,
   enabled: { type: Boolean, default: false },
   words: [String],
+  flood: { type: Boolean, default: false },
+  caps: { type: Boolean, default: false },
+  invite: { type: Boolean, default: false },
 });
 export const AutoMod = mongoose.model('AutoMod', autoModSchema);
 
@@ -320,6 +413,39 @@ export async function setAutoModWords(guildId, words) {
     { words },
     { upsert: true, new: true }
   );
+}
+export async function setAutoModFlood(guildId, flood) {
+  await AutoMod.findOneAndUpdate(
+    { guildId },
+    { flood },
+    { upsert: true, new: true }
+  );
+}
+export async function setAutoModCaps(guildId, caps) {
+  await AutoMod.findOneAndUpdate(
+    { guildId },
+    { caps },
+    { upsert: true, new: true }
+  );
+}
+export async function setAutoModInvite(guildId, invite) {
+  await AutoMod.findOneAndUpdate(
+    { guildId },
+    { invite },
+    { upsert: true, new: true }
+  );
+}
+export async function getAutoModFlood(guildId) {
+  const entry = await AutoMod.findOne({ guildId });
+  return entry ? entry.flood : false;
+}
+export async function getAutoModCaps(guildId) {
+  const entry = await AutoMod.findOne({ guildId });
+  return entry ? entry.caps : false;
+}
+export async function getAutoModInvite(guildId) {
+  const entry = await AutoMod.findOne({ guildId });
+  return entry ? entry.invite : false;
 }
 export async function getAutoModEnabled(guildId) {
   const entry = await AutoMod.findOne({ guildId });

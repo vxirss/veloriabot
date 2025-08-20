@@ -65,3 +65,32 @@ for (const file of commandFiles) {
 
 // Login to Discord with your bot token
 client.login(process.env.TOKEN);
+
+// Synchronizacja ustawień automoda z bazy co 30 sekund
+import {
+  getAutoModEnabled,
+  getAutoModWords,
+  getAutoModFlood,
+  getAutoModCaps,
+  getAutoModInvite
+} from './database.js';
+
+client.autoModSettings = new Map();
+
+async function syncAutoModSettings() {
+  for (const guild of client.guilds.cache.values()) {
+    const guildId = guild.id;
+    client.autoModSettings.set(guildId, {
+      enabled: await getAutoModEnabled(guildId),
+      words: await getAutoModWords(guildId),
+      flood: await getAutoModFlood(guildId),
+      caps: await getAutoModCaps(guildId),
+      invite: await getAutoModInvite(guildId)
+    });
+  }
+}
+
+client.on('ready', () => {
+  syncAutoModSettings();
+  setInterval(syncAutoModSettings, 30000);
+});

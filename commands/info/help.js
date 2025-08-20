@@ -8,26 +8,40 @@ export default {
   },
   async execute(interaction) {
     const commands = interaction.client.commands;
-    // Spisz wszystkie komendy w jeden ciąg
     const allCommands = Array.from(commands.values());
-    const embeds = [];
-    let desc = '';
+    // Wyciągnij komendę config
+    const configCmd = allCommands.find(cmd => cmd.data.name === 'config');
+    // Grupowanie komend według folderu (kategorii)
+    const categories = {};
     allCommands.forEach(cmd => {
-  const line = `• \`/${cmd.data.name}\` — ${cmd.data.description}\n`;
-      if ((desc.length + line.length) > 4096) {
-        embeds.push(new EmbedBuilder()
-          .setTitle('Komendy Bota Veloria')
-          .setColor(0x6E6565)
-          .setDescription(desc)
-          .setTimestamp());
-        desc = line;
-      } else {
-        desc += line;
+      // Pomijaj config, dodamy ją osobno
+      if (cmd.data.name === 'config') return;
+      let category = 'Inne';
+      if (cmd.__filename) {
+        const parts = cmd.__filename.split(path.sep);
+        const idx = parts.findIndex(p => p === 'commands');
+        if (idx !== -1 && parts[idx + 1]) category = parts[idx + 1];
       }
+      if (!categories[category]) categories[category] = [];
+      categories[category].push(cmd);
     });
-    if (desc.length > 0) {
+
+    const embeds = [];
+    // Dodaj config na górze
+    if (configCmd) {
       embeds.push(new EmbedBuilder()
-        .setTitle('Komendy Bota Veloria')
+        .setTitle('Konfiguracja serwera')
+        .setColor(0x6E6565)
+        .setDescription(`• \`/${configCmd.data.name}\` — ${configCmd.data.description}`)
+        .setTimestamp());
+    }
+    for (const [category, cmds] of Object.entries(categories)) {
+      let desc = '';
+      cmds.forEach(cmd => {
+        desc += `• \`/${cmd.data.name}\` — ${cmd.data.description}\n`;
+      });
+      embeds.push(new EmbedBuilder()
+        .setTitle(`Komendy: ${category}`)
         .setColor(0x6E6565)
         .setDescription(desc)
         .setTimestamp());
